@@ -23,7 +23,7 @@ xcodebuild \
   build
 
 open_app() {
-  /usr/bin/open -n "$APP_BUNDLE" --args -cotabby-debug
+  /usr/bin/open -n "$APP_BUNDLE"
 }
 
 wait_for_app() {
