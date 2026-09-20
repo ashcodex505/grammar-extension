@@ -381,6 +381,7 @@
 		72FC053A621E4B00F7E52BD3 /* EmojiPopularity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77DB52780A112A686C06D7E3 /* EmojiPopularity.swift */; };
 		7324AD21F85FF6DDDD27EC84 /* SuggestionOverlayStabilityGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DB247AACE1B28D45DB52B0 /* SuggestionOverlayStabilityGate.swift */; };
 		735C2E64CA51F58098B30A0D /* it.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0397F1DACB094A0F6A66BC0E /* it.txt */; };
+		737158E0902F7053720039D7 /* PersonalCorrectionJSONCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368F8D96278AF98B3F95281F /* PersonalCorrectionJSONCoding.swift */; };
 		73B39F0BC9FFA95059AA7C7F /* GhostFontSizeStabilizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2C4ED070BBE86378229BB5 /* GhostFontSizeStabilizer.swift */; };
 		73B7C4D5143F7AEC321BC873 /* PermissionAndContextModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEBBBAB9588AA8EDBA41520 /* PermissionAndContextModelTests.swift */; };
 		744B06C2488156B178675615 /* PermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BF316556FDA64CB8AD07B6 /* PermissionManager.swift */; };
@@ -497,6 +498,7 @@
 		996786038E31C671B650DFE4 /* SuggestionOverlayViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9720913FECB22A9A28C96333 /* SuggestionOverlayViews.swift */; };
 		9973763A9F4EA4D8B4AE59EB /* SuggestionEngineRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384FBCF5D7A3A446C5BE2B8D /* SuggestionEngineRouter.swift */; };
 		998168DC04A6A13D7D1F3165 /* ModelDownloadManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03CA4BBA3C54F840546033E0 /* ModelDownloadManagerTests.swift */; };
+		9A18B9416D0D7102CDBFE2D8 /* PersonalCorrectionJSONCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368F8D96278AF98B3F95281F /* PersonalCorrectionJSONCoding.swift */; };
 		9A2D50EF4911E45EEB4556D6 /* Aria2OutputParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83457CCF1A50CE83428C363D /* Aria2OutputParser.swift */; };
 		9AE3398FB0E4696C89550C04 /* EmojiMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8311FAC345FE431FA89855 /* EmojiMatcher.swift */; };
 		9B6C176547D2B6D118572E41 /* BaseCompletionPromptRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C1AE4120FA68524700C9324 /* BaseCompletionPromptRenderer.swift */; };
@@ -917,6 +919,7 @@
 		35C0B587D81D87ACB952C95E /* SuggestionSettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionSettingsStoreTests.swift; sourceTree = "<group>"; };
 		36652DB88C5948AA4A31524A /* ModelFileValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelFileValidator.swift; sourceTree = "<group>"; };
 		3680E1B8FA712A888F509640 /* ClipboardContentDistillerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardContentDistillerTests.swift; sourceTree = "<group>"; };
+		368F8D96278AF98B3F95281F /* PersonalCorrectionJSONCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalCorrectionJSONCoding.swift; sourceTree = "<group>"; };
 		384FBCF5D7A3A446C5BE2B8D /* SuggestionEngineRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionEngineRouter.swift; sourceTree = "<group>"; };
 		38D10022BEFABAD14D16EBF2 /* SuggestionOverlayStabilityGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionOverlayStabilityGateTests.swift; sourceTree = "<group>"; };
 		38FCE0E0C38A776383B11809 /* TypoGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypoGate.swift; sourceTree = "<group>"; };
@@ -2607,6 +2610,7 @@
 				E5E4A3441A48536F5FB605B6 /* AutomaticCorrectionTransaction.swift */,
 				E371FD07C2AE9DC20069913B /* CorrectionImportParser.swift */,
 				DCB4FA1F8F815B62CFF9E63C /* PersonalCorrectionIndex.swift */,
+				368F8D96278AF98B3F95281F /* PersonalCorrectionJSONCoding.swift */,
 			);
 			path = Correction;
 			sourceTree = "<group>";
@@ -3504,6 +3508,7 @@
 				D553BAA6C9F478533BD4A221 /* PermissionsPaneView.swift in Sources */,
 				0BE3561D9C1493B44DFD2239 /* PersonalCorrectionDefaults.swift in Sources */,
 				350DA2D03D06D49832317DDF /* PersonalCorrectionIndex.swift in Sources */,
+				9A18B9416D0D7102CDBFE2D8 /* PersonalCorrectionJSONCoding.swift in Sources */,
 				50033A01560FAEBF72DA5C53 /* PersonalCorrectionModel.swift in Sources */,
 				62F4C7226AB2E10139213C3E /* PersonalCorrectionModels.swift in Sources */,
 				84D44AAE841AA224CDD6C5D9 /* PersonalCorrectionStore.swift in Sources */,
@@ -3793,6 +3798,7 @@
 				39571AB31481959CD5C223AE /* PermissionsPaneView.swift in Sources */,
 				986882E1CFE1A2C36A9B0AA8 /* PersonalCorrectionDefaults.swift in Sources */,
 				8FA7D12D7B8C1CA8DA6200FC /* PersonalCorrectionIndex.swift in Sources */,
+				737158E0902F7053720039D7 /* PersonalCorrectionJSONCoding.swift in Sources */,
 				95FDB152AD9C29BB3105AF0A /* PersonalCorrectionModel.swift in Sources */,
 				FE674FA7F1167B4B109BE07B /* PersonalCorrectionModels.swift in Sources */,
 				50377E59673F797AD0B46413 /* PersonalCorrectionStore.swift in Sources */,

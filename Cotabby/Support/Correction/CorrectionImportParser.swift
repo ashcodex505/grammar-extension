@@ -142,8 +142,7 @@ nonisolated enum CorrectionImportParser {
         _ data: Data,
         source: PersonalCorrectionRule.Source
     ) -> Preview {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PersonalCorrectionJSONCoding.makeDecoder()
         if let database = try? decoder.decode(PersonalCorrectionDatabase.self, from: data) {
             var preview = validated(database.rules.map { rule in
                 var imported = rule

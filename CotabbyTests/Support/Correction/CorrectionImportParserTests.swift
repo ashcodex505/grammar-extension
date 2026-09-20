@@ -67,8 +67,7 @@ final class CorrectionImportParserTests: XCTestCase {
                 lastSeenAt: date
             )]
         )
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        let encoder = PersonalCorrectionJSONCoding.makeEncoder()
 
         let preview = CorrectionImportParser.parse(
             data: try encoder.encode(database),

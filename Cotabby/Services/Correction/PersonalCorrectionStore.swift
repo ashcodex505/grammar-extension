@@ -32,8 +32,7 @@ nonisolated actor PersonalCorrectionStore {
             return PersonalCorrectionDatabase()
         }
         let data = try Data(contentsOf: fileURL)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PersonalCorrectionJSONCoding.makeDecoder()
         let database = try decoder.decode(PersonalCorrectionDatabase.self, from: data)
         guard database.version <= PersonalCorrectionDatabase.currentVersion else {
             throw StoreError.unsupportedVersion(database.version)
@@ -44,17 +43,13 @@ nonisolated actor PersonalCorrectionStore {
     func save(_ database: PersonalCorrectionDatabase) throws {
         let directory = fileURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
+        let encoder = PersonalCorrectionJSONCoding.makeEncoder()
         let data = try encoder.encode(database)
         try data.write(to: fileURL, options: [.atomic])
     }
 
     func exportData(_ database: PersonalCorrectionDatabase) throws -> Data {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
+        let encoder = PersonalCorrectionJSONCoding.makeEncoder()
         return try encoder.encode(database)
     }
 
