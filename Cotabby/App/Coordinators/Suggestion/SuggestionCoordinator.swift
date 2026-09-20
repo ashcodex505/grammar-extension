@@ -54,6 +54,9 @@ final class SuggestionCoordinator: ObservableObject {
     /// Chooses at most one enabled SymSpell language from the text surrounding the typo. Ambiguous
     /// contexts return nil so correction ranking falls back to the system spell checker.
     let spellingLanguageResolver: SpellingLanguageResolver
+    /// Process-lifetime user dictionary and exact replacement index. Explicit user intent is
+    /// consulted before the generic NSSpellChecker/SymSpell gate.
+    let personalCorrections: PersonalCorrectionModel
 
     /// Optional first-look hook the emoji picker installs to observe the keystroke stream. Called at
     /// the very top of `handleInputEvent`, before any suggestion logic. Returns `true` when an emoji
@@ -157,6 +160,7 @@ final class SuggestionCoordinator: ObservableObject {
         spellChecker: CurrentWordSpellChecker,
         symSpellCorrector: SymSpellCorrector,
         spellingLanguageResolver: SpellingLanguageResolver = SpellingLanguageResolver(),
+        personalCorrections: PersonalCorrectionModel = PersonalCorrectionModel(),
         qualityMetricsStore: SuggestionQualityMetricsStore,
         userDefaults: UserDefaults = .standard
     ) {
@@ -180,6 +184,7 @@ final class SuggestionCoordinator: ObservableObject {
         self.spellChecker = spellChecker
         self.symSpellCorrector = symSpellCorrector
         self.spellingLanguageResolver = spellingLanguageResolver
+        self.personalCorrections = personalCorrections
         self.qualityMetricsStore = qualityMetricsStore
         self.userDefaults = userDefaults
         settingsSnapshot = suggestionSettings.snapshot

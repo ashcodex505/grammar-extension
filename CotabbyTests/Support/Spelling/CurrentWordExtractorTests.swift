@@ -117,4 +117,36 @@ final class CurrentWordExtractorTests: XCTestCase {
             )
         )
     }
+
+    func test_typoReplacement_supportsExplicitPhraseAndSingleCharacterRules() {
+        XCTAssertEqual(
+            TypoCorrectionReplacementPlanner.plan(
+                precedingText: "please get chat ",
+                expectedTypo: "get chat",
+                correctedWord: "this chat",
+                requiresTrailingSpace: true
+            ),
+            TypoCorrectionReplacement(deletingUTF16Count: 9, replacementText: "this chat ")
+        )
+        XCTAssertEqual(
+            TypoCorrectionReplacementPlanner.plan(
+                precedingText: "hello u ",
+                expectedTypo: "u",
+                correctedWord: "you",
+                requiresTrailingSpace: true
+            ),
+            TypoCorrectionReplacement(deletingUTF16Count: 2, replacementText: "you ")
+        )
+    }
+
+    func test_typoReplacement_doesNotMatchInsideAnotherWord() {
+        XCTAssertNil(
+            TypoCorrectionReplacementPlanner.plan(
+                precedingText: "time ",
+                expectedTypo: "im",
+                correctedWord: "I'm",
+                requiresTrailingSpace: true
+            )
+        )
+    }
 }

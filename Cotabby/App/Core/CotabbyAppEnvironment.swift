@@ -21,6 +21,9 @@ final class CotabbyAppEnvironment {
     let appUpdateManager: AppUpdateManager
     let permissionGuidanceController: PermissionGuidanceController
     let suggestionSettings: SuggestionSettingsModel
+    /// User-owned replacements, accepted vocabulary, and learned feedback shared by correction
+    /// orchestration and the Settings UI.
+    let personalCorrections: PersonalCorrectionModel
     let openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     let foundationModelAvailabilityService: FoundationModelAvailabilityService
     let powerSourceMonitor: PowerSourceMonitor
@@ -61,6 +64,7 @@ final class CotabbyAppEnvironment {
             configuration: configuration,
             endpointCredentialStore: endpointCredentialStore
         )
+        let personalCorrections = PersonalCorrectionModel()
         let openAICompatibleClient = OpenAICompatibleAPIClient()
         let openAICompatibleConnectionModel = OpenAICompatibleConnectionModel(
             client: openAICompatibleClient
@@ -274,6 +278,7 @@ final class CotabbyAppEnvironment {
             spellChecker: spellChecker,
             symSpellCorrector: symSpellCorrector,
             spellingLanguageResolver: SpellingLanguageResolver(),
+            personalCorrections: personalCorrections,
             qualityMetricsStore: qualityMetricsStore
         )
 
@@ -329,6 +334,7 @@ final class CotabbyAppEnvironment {
         self.appUpdateManager = appUpdateManager
         self.permissionGuidanceController = permissionGuidanceController
         self.suggestionSettings = suggestionSettings
+        self.personalCorrections = personalCorrections
         self.openAICompatibleConnectionModel = openAICompatibleConnectionModel
         self.foundationModelAvailabilityService = foundationModelAvailabilityService
         self.powerSourceMonitor = powerSourceMonitor

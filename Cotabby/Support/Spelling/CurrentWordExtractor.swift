@@ -124,17 +124,31 @@ enum TypoCorrectionReplacementPlanner {
         requiresTrailingSpace: Bool
     ) -> TypoCorrectionReplacement? {
         let normalizedCorrection = correctedWord.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trailingSpaceCount = precedingText.last == " " ? 1 : 0
+        let textWithoutSpace = trailingSpaceCount == 1 ? String(precedingText.dropLast()) : precedingText
         guard !normalizedCorrection.isEmpty,
               normalizedCorrection != expectedTypo,
-              let live = CurrentWordExtractor.extractTrailingWord(from: precedingText),
-              live.result.word == expectedTypo,
-              !requiresTrailingSpace || live.trailingSpaceCount == 1 else {
+              !expectedTypo.isEmpty,
+              !requiresTrailingSpace || trailingSpaceCount == 1,
+              textWithoutSpace.hasSuffix(expectedTypo) else {
             return nil
         }
 
-        let preservedSpaces = String(repeating: " ", count: live.trailingSpaceCount)
+        // Validate the left boundary as well as the literal suffix. This generalizes the old
+        // one-word planner to explicit phrase and single-letter rules without letting a rule such
+        // as `im` match inside `time`.
+        let targetStart = textWithoutSpace.index(
+            textWithoutSpace.endIndex,
+            offsetBy: -expectedTypo.count
+        )
+        if targetStart > textWithoutSpace.startIndex {
+            let characterBefore = textWithoutSpace[textWithoutSpace.index(before: targetStart)]
+            guard !characterBefore.isLetter, !characterBefore.isNumber else { return nil }
+        }
+
+        let preservedSpaces = String(repeating: " ", count: trailingSpaceCount)
         return TypoCorrectionReplacement(
-            deletingUTF16Count: (expectedTypo as NSString).length + live.trailingSpaceCount,
+            deletingUTF16Count: (expectedTypo as NSString).length + trailingSpaceCount,
             replacementText: normalizedCorrection + preservedSpaces
         )
     }

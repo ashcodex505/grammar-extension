@@ -93,6 +93,13 @@ extension SuggestionCoordinator {
             return
         }
 
+        // Explicit personal replacements run before spelling detection. They deliberately handle
+        // valid words (`form` -> `from`), single characters (`u` -> `you`), contractions, and
+        // phrases that NSSpellChecker and the one-word extractor cannot represent.
+        if handlePersonalCorrection(rawContext: rawContext, workID: workID) {
+            return
+        }
+
         // Typo gate: before building a normal continuation, check the current word with
         // NSSpellChecker. A misspelled word either suppresses the continuation (so completions never
         // pile onto a broken word), presents a green correction, or automatically fixes a completed
@@ -453,6 +460,16 @@ extension SuggestionCoordinator {
     /// offering, or applying a correction; `false` proceeds with a normal continuation. Kept separate
     /// so `generateFromCurrentFocus` stays within the project's cyclomatic-complexity budget.
     private func handleTypoGate(rawContext: FocusedInputSnapshot, workID: UInt64) -> Bool {
+        if let trailingWord = CurrentWordExtractor.extractTrailingWord(
+            from: rawContext.precedingText
+        )?.result.word,
+           personalCorrections.index.acceptsVocabulary(
+               trailingWord,
+               bundleIdentifier: rawContext.bundleIdentifier
+           ) {
+            return false
+        }
+
         switch TypoGate.resolve(
             precedingText: rawContext.precedingText,
             settings: TypoGate.Settings(
@@ -497,6 +514,39 @@ extension SuggestionCoordinator {
             )
             return true
         }
+    }
+
+    /// Applies or offers the longest matching user-authored suffix after a committed Space. The
+    /// existing correction replacement planner still revalidates the literal source immediately
+    /// before mutation, so imported rules do not weaken Cotabby's stale-AX safety invariant.
+    private func handlePersonalCorrection(
+        rawContext: FocusedInputSnapshot,
+        workID: UInt64
+    ) -> Bool {
+        guard let match = personalCorrections.index.committedMatch(
+            precedingText: rawContext.precedingText,
+            bundleIdentifier: rawContext.bundleIdentifier
+        ) else {
+            return false
+        }
+
+        switch match.rule.action {
+        case .automatic:
+            applyAutomaticCorrection(
+                typoWord: match.matchedText,
+                correctedWord: match.replacementText,
+                rawContext: rawContext,
+                workID: workID
+            )
+        case .offer:
+            presentCorrection(
+                typoWord: match.matchedText,
+                correctedWord: match.replacementText,
+                rawContext: rawContext,
+                workID: workID
+            )
+        }
+        return true
     }
 
     /// Routes the typo to one enabled language-specific SymSpell index. The dictionaries remain
