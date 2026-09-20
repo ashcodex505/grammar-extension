@@ -219,6 +219,52 @@ enum AXHelper {
         return nil
     }
 
+    /// Reads the user's current text selection from a focused editable element.
+    ///
+    /// Native AppKit fields usually vend `AXSelectedText` directly. Some web and custom editors
+    /// expose only a selected range plus `AXStringForRange`, while Chromium contenteditables may
+    /// expose only opaque text markers. Trying the representations in that order gives quick
+    /// correction capture broad compatibility without copying an entire large document unless it
+    /// is the only available fallback.
+    static func selectedText(on element: AXUIElement) -> String? {
+        if let selected = stringValue(for: kAXSelectedTextAttribute as CFString, on: element) {
+            return selected
+        }
+
+        if let range = rangeValue(for: kAXSelectedTextRangeAttribute as CFString, on: element),
+           range.length > 0 {
+            if let selected = parameterizedStringValue(
+                for: kAXStringForRangeParameterizedAttribute as CFString,
+                range: range,
+                on: element
+            ) {
+                return selected
+            }
+
+            if let value = stringValue(for: kAXValueAttribute as CFString, on: element) {
+                let nsValue = value as NSString
+                let upperBound = range.location > Int.max - range.length
+                    ? Int.max
+                    : range.location + range.length
+                if range.location >= 0, upperBound <= nsValue.length {
+                    return nsValue.substring(with: range)
+                }
+            }
+        }
+
+        let parameterizedAttributes = Set(parameterizedAttributeNames(on: element))
+        guard let markerSelection = synthesizeMarkerSelection(
+            on: element,
+            parameterizedAttributes: parameterizedAttributes
+        ), markerSelection.selection.length > 0 else {
+            return nil
+        }
+        let nsText = markerSelection.text as NSString
+        let range = markerSelection.selection
+        guard range.location >= 0, NSMaxRange(range) <= nsText.length else { return nil }
+        return nsText.substring(with: range)
+    }
+
     /// Reads a parameterized attributed-string range (e.g. `AXAttributedStringForRange`) so callers
     /// can inspect per-character styling such as font and foreground color without serializing the
     /// whole field. Returns nil for hosts that do not implement the attribute.

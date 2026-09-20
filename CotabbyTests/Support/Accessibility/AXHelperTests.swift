@@ -135,6 +135,15 @@ final class AXHelperTests: XCTestCase {
         XCTAssertEqual(attributed?.length, 1)
     }
 
+    func test_selectedText_readsTheCurrentSelectionFromTheRealField() throws {
+        let element = try requireFieldElement()
+        Self.textView?.setSelectedRange(NSRange(location: 4, length: 5))
+
+        XCTAssertEqual(AXHelper.selectedText(on: element), "quick")
+
+        Self.textView?.setSelectedRange(NSRange(location: 0, length: 0))
+    }
+
     func test_resolveFieldStyle_readsFontAndColorFromTheHost() throws {
         let element = try requireFieldElement()
 

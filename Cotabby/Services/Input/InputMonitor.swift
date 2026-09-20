@@ -38,6 +38,13 @@ enum InputMonitorAcceptTapDecision: Equatable {
     case consume
 }
 
+/// Semantic command recognized by the dedicated consuming global-hotkey tap.
+enum InputMonitorCommandHotkeyDecision: Equatable {
+    case notHandled
+    case quickCorrection
+    case globalToggle
+}
+
 /// Installs two taps:
 /// - A steady-state `.listenOnly` observer at the head of the chain. Listen-only taps do not gate
 ///   event delivery on the callback's return, so a slow main actor cannot stall input in unrelated
@@ -89,6 +96,10 @@ final class InputMonitor {
     /// `isGloballyEnabled` setting; the keystroke is then consumed so the host app never sees it.
     var onGlobalToggleHotkey: (@MainActor () -> Void)?
 
+    /// Fired for Control–Shift–` before the source application sees the keystroke. The receiver
+    /// captures the current AX selection synchronously, then presents the quick-correction panel.
+    var onQuickCorrectionHotkey: (@MainActor () -> Void)?
+
     /// When false, the observer passes keystrokes through without classifying or notifying the
     /// coordinator. This eliminates per-keystroke overhead in apps where Cotabby will never act
     /// (terminals, globally disabled, per-app disabled).
@@ -108,9 +119,9 @@ final class InputMonitor {
     private var acceptTap: CFMachPort?
     private var acceptRunLoopSource: CFRunLoopSource?
 
-    /// Dedicated consuming tap for the global-toggle hotkey. Lives independently of the accept tap
-    /// because it must fire even when no suggestion is visible — and even when Cotabby is globally
-    /// disabled, since the whole purpose of the hotkey is to flip that switch back on.
+    /// Dedicated consuming tap for app-wide command hotkeys. It lives independently of the accept
+    /// tap because commands must fire when no suggestion is visible. Quick correction must also
+    /// work while completion is disabled, and the global toggle must be able to turn it back on.
     private var toggleTap: CFMachPort?
     private var toggleRunLoopSource: CFRunLoopSource?
 
@@ -169,15 +180,15 @@ final class InputMonitor {
         }
     }
 
-    /// Installs or removes the global-toggle tap to match the current binding. Called by the
-    /// environment whenever the user changes or clears the toggle hotkey, so the tap's lifetime
-    /// tracks "binding exists" without paying for it when nothing is bound.
+    /// Installs or removes the command tap to match the currently available commands. Quick
+    /// correction uses a fixed binding, while global toggle remains user-configurable.
     func refreshToggleTap() {
         guard permissionProvider() else {
             destroyToggleTap()
             return
         }
-        if globalToggleKeyCodeProvider() == Self.disabledKeyCode {
+        if globalToggleKeyCodeProvider() == Self.disabledKeyCode,
+           onQuickCorrectionHotkey == nil {
             destroyToggleTap()
         } else {
             installToggleTapIfNeeded()
@@ -185,6 +196,8 @@ final class InputMonitor {
     }
 
     private static let disabledKeyCode: CGKeyCode = CGKeyCode(UInt16.max)
+    static let quickCorrectionKeyCode: CGKeyCode = 50
+    static let quickCorrectionModifiers: ShortcutModifierMask = [.control, .shift]
 
     /// How long the accept tap lingers (fail-open) after the overlay hides before its mach port is
     /// invalidated. A final-chunk accept runs *inside* this tap's own callback: it posts the
@@ -373,7 +386,7 @@ final class InputMonitor {
             CotabbyLogger.app.warning("Failed to create CGEvent toggle tap")
             return
         }
-        CotabbyLogger.app.info("CGEvent toggle tap installed (active, toggle-hotkey only)")
+        CotabbyLogger.app.info("CGEvent command tap installed (active, global hotkeys only)")
 
         toggleTap = tap
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
@@ -428,14 +441,13 @@ final class InputMonitor {
             CFMachPortInvalidate(tap)
         }
         toggleTap = nil
-        CotabbyLogger.app.info("CGEvent toggle tap removed")
+        CotabbyLogger.app.info("CGEvent command tap removed")
     }
 
-    /// Active toggle tap: consumes a keystroke only when it matches the configured global-toggle
-    /// hotkey. The match is intentionally evaluated against the providers (not a cached snapshot)
-    /// so a settings change is picked up on the very next keystroke. Runs independently of
-    /// `shouldProcessEventsProvider` because the hotkey must work even when Cotabby is globally
-    /// disabled — that is its only job.
+    /// Active command tap: consumes a keystroke only when it matches a Cotabby-wide command. The
+    /// match is evaluated against providers at event time so a setting change takes effect on the
+    /// next keystroke. It intentionally bypasses `shouldProcessEventsProvider`: quick correction
+    /// and the enable/disable toggle must remain reachable while normal completion is paused.
     func handleToggleTap(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
@@ -450,24 +462,53 @@ final class InputMonitor {
                 return Unmanaged.passUnretained(event)
             }
 
-            let bound = globalToggleKeyCodeProvider()
-            guard bound != Self.disabledKeyCode else {
+            // A held command should open or toggle only once, never once per key-repeat tick.
+            guard event.getIntegerValueField(.keyboardEventAutorepeat) == 0 else {
                 return Unmanaged.passUnretained(event)
             }
 
-            let keyCode = keyCode(from: event)
+            let keyEvent = InputMonitorKeyEvent(
+                keyCode: keyCode(from: event),
+                flags: event.flags
+            )
+            switch resolveCommandHotkey(keyEvent) {
+            case .quickCorrection:
+                onQuickCorrectionHotkey?()
+            case .globalToggle:
+                onGlobalToggleHotkey?()
+            case .notHandled:
+                return Unmanaged.passUnretained(event)
+            }
+
             let modifiers = ShortcutModifierMask(eventFlags: event.flags)
-            guard keyCode == bound, modifiers == globalToggleKeyModifiersProvider() else {
-                return Unmanaged.passUnretained(event)
-            }
-
-            onGlobalToggleHotkey?()
-            CotabbyLogger.app.debug("Toggle tap consumed keyCode=\(keyCode) modifiers=\(modifiers.rawValue)")
+            CotabbyLogger.app.debug(
+                "Command tap consumed keyCode=\(keyEvent.keyCode) modifiers=\(modifiers.rawValue)"
+            )
             return nil
 
         default:
             return Unmanaged.passUnretained(event)
         }
+    }
+
+    /// Testable command matching for the active global-hotkey tap. Quick correction takes priority
+    /// if the user assigns the same chord to global toggle; the fixed capture shortcut must have
+    /// one deterministic meaning rather than running two actions.
+    func resolveCommandHotkey(_ keyEvent: InputMonitorKeyEvent) -> InputMonitorCommandHotkeyDecision {
+        let modifiers = ShortcutModifierMask(eventFlags: keyEvent.flags)
+        if onQuickCorrectionHotkey != nil,
+           keyEvent.keyCode == Self.quickCorrectionKeyCode,
+           modifiers == Self.quickCorrectionModifiers {
+            return .quickCorrection
+        }
+
+        let toggleKeyCode = globalToggleKeyCodeProvider()
+        if toggleKeyCode != Self.disabledKeyCode,
+           keyEvent.keyCode == toggleKeyCode,
+           modifiers == globalToggleKeyModifiersProvider() {
+            return .globalToggle
+        }
+        return .notHandled
     }
 
     /// Listen-only observer: classifies the event and notifies the coordinator. The return value

@@ -26,6 +26,27 @@ final class PersonalCorrectionModel: ObservableObject {
         didMutateDatabase()
     }
 
+    /// Adds a rule or replaces the existing rule with the same normalized trigger and scope.
+    /// Quick capture uses this path so teaching Cotabby a better replacement edits the user's
+    /// existing intent instead of leaving two ambiguous rules in the lookup index.
+    func upsertRule(_ rule: PersonalCorrectionRule) {
+        guard !rule.trigger.isEmpty, !rule.replacement.isEmpty else { return }
+        if let index = database.rules.firstIndex(where: {
+            $0.normalizedTrigger == rule.normalizedTrigger
+                && $0.scope == rule.scope
+                && $0.isCaseSensitive == rule.isCaseSensitive
+        }) {
+            var updated = rule
+            updated.id = database.rules[index].id
+            updated.createdAt = database.rules[index].createdAt
+            updated.updatedAt = Date()
+            database.rules[index] = updated
+        } else {
+            database.rules.append(rule)
+        }
+        didMutateDatabase()
+    }
+
     func updateRule(_ rule: PersonalCorrectionRule) {
         guard let index = database.rules.firstIndex(where: { $0.id == rule.id }) else { return }
         var updated = rule
@@ -240,7 +261,12 @@ final class PersonalCorrectionModel: ObservableObject {
     ) -> PersonalCorrectionDatabase {
         var merged = stored
         for rule in inMemory.rules {
-            merged.rules.removeAll(where: { $0.id == rule.id })
+            merged.rules.removeAll(where: {
+                $0.id == rule.id
+                    || ($0.normalizedTrigger == rule.normalizedTrigger
+                        && $0.scope == rule.scope
+                        && $0.isCaseSensitive == rule.isCaseSensitive)
+            })
             merged.rules.append(rule)
         }
         for entry in inMemory.vocabulary {
