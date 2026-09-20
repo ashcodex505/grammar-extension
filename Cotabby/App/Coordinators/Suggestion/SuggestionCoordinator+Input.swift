@@ -56,6 +56,15 @@ extension SuggestionCoordinator {
     }
 
     func handleFocusSnapshotChange(_ snapshot: FocusSnapshot) {
+        if let transaction = automaticCorrectionTransaction,
+           let context = snapshot.context,
+           (context.bundleIdentifier != transaction.bundleIdentifier
+               || context.elementIdentifier != transaction.elementIdentifier
+               || context.focusChangeSequence != transaction.focusChangeSequence) {
+            automaticCorrectionTransaction = nil
+            inputMonitor.setCorrectionUndoInterceptionActive(false)
+        }
+
         switch capabilityFlickerGate.evaluate(snapshot) {
         case .apply:
             break
@@ -182,6 +191,14 @@ extension SuggestionCoordinator {
     }
 
     func handleInputEvent(_ event: CapturedInputEvent) -> Bool {
+        // Any physical key other than the separately routed undo Backspace commits the automatic
+        // correction. Synthetic insertion events never enter here, so arming survives long enough
+        // for the user to reject the change naturally.
+        if automaticCorrectionTransaction != nil {
+            automaticCorrectionTransaction = nil
+            inputMonitor.setCorrectionUndoInterceptionActive(false)
+        }
+
         // Give the emoji picker first look at every keystroke so it can drive its trigger state
         // machine. When a capture is involved, the picker owns the interaction: the suggestion
         // pipeline stands down and any lingering ghost text is cleared so it does not show behind the

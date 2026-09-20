@@ -460,6 +460,14 @@ extension SuggestionCoordinator {
     /// offering, or applying a correction; `false` proceeds with a normal continuation. Kept separate
     /// so `generateFromCurrentFocus` stays within the project's cyclomatic-complexity budget.
     private func handleTypoGate(rawContext: FocusedInputSnapshot, workID: UInt64) -> Bool {
+        if rejectedCorrectionOccurrence?.matchesRestoredOriginal(context: rawContext) == true {
+            rejectedCorrectionOccurrence = nil
+            clearSuggestion()
+            hideOverlay(reason: "Overlay hidden because the user reverted this correction occurrence.")
+            state = .idle
+            return true
+        }
+
         if let trailingWord = CurrentWordExtractor.extractTrailingWord(
             from: rawContext.precedingText
         )?.result.word,
@@ -528,6 +536,14 @@ extension SuggestionCoordinator {
             bundleIdentifier: rawContext.bundleIdentifier
         ) else {
             return false
+        }
+
+        if rejectedCorrectionOccurrence?.matches(match, context: rawContext) == true {
+            rejectedCorrectionOccurrence = nil
+            clearSuggestion()
+            hideOverlay(reason: "Overlay hidden because the user reverted this correction occurrence.")
+            state = .idle
+            return true
         }
 
         switch match.rule.action {
@@ -633,6 +649,20 @@ extension SuggestionCoordinator {
             return
         }
 
+        automaticCorrectionTransaction = AutomaticCorrectionTransaction(
+            originalText: typoWord,
+            replacementText: correctedWord,
+            bundleIdentifier: rawContext.bundleIdentifier,
+            elementIdentifier: rawContext.elementIdentifier,
+            focusChangeSequence: rawContext.focusChangeSequence
+        )
+        inputMonitor.setCorrectionUndoInterceptionActive(true)
+        personalCorrections.recordAppliedCorrection(
+            source: typoWord,
+            destination: correctedWord,
+            bundleIdentifier: rawContext.bundleIdentifier
+        )
+
         focusModel.invalidateTransientCaretCaches()
         cancelPredictionWork()
         clearSuggestion(clearDiagnostics: false)
@@ -648,6 +678,47 @@ extension SuggestionCoordinator {
         // Synthetic replacement is asynchronous from the host editor's perspective. Poll until AX
         // publishes the corrected text before asking for the next continuation.
         schedulePredictionAfterHostPublishDelay()
+    }
+
+    /// Consumes one immediate Backspace only when the live Accessibility snapshot still proves that
+    /// the exact correction Cotabby inserted is adjacent to the caret. On success the restored word
+    /// has no trailing Space, matching the native typing flow: pressing Space again commits it while
+    /// one-shot rejection memory prevents the same rule from firing again.
+    func undoMostRecentAutomaticCorrection() -> Bool {
+        guard let transaction = automaticCorrectionTransaction else { return false }
+        focusModel.refreshNow()
+        guard let context = focusModel.snapshot.context,
+              let plan = transaction.undoPlan(for: context),
+              suggestionInserter.replace(
+                  deletingUTF16Count: plan.deletingUTF16Count,
+                  with: plan.replacementText
+              ) else {
+            automaticCorrectionTransaction = nil
+            inputMonitor.setCorrectionUndoInterceptionActive(false)
+            return false
+        }
+
+        rejectedCorrectionOccurrence = RejectedCorrectionOccurrence(
+            originalText: transaction.originalText,
+            replacementText: transaction.replacementText,
+            bundleIdentifier: transaction.bundleIdentifier,
+            elementIdentifier: transaction.elementIdentifier,
+            focusChangeSequence: transaction.focusChangeSequence
+        )
+        personalCorrections.recordRevertedCorrection(
+            source: transaction.originalText,
+            destination: transaction.replacementText,
+            bundleIdentifier: transaction.bundleIdentifier
+        )
+        automaticCorrectionTransaction = nil
+        inputMonitor.setCorrectionUndoInterceptionActive(false)
+        focusModel.invalidateTransientCaretCaches()
+        cancelPredictionWork()
+        clearSuggestion(clearDiagnostics: false)
+        hideOverlay(reason: "Overlay hidden because Backspace reverted the automatic correction.")
+        state = .idle
+        schedulePredictionAfterHostPublishDelay()
+        return true
     }
 
     /// Presents a native spell-checker correction as a replace-the-word suggestion, with no model

@@ -138,6 +138,11 @@ final class SuggestionCoordinator: ObservableObject {
     /// stands down instead of scheduling a duplicate regeneration.
     var pendingSpeculativeSignature: String?
 
+    /// Armed only after a successful automatic replacement. The consuming input tap uses it to
+    /// implement one immediate, fail-open Backspace reversal.
+    var automaticCorrectionTransaction: AutomaticCorrectionTransaction?
+    var rejectedCorrectionOccurrence: RejectedCorrectionOccurrence?
+
     /// Pure state for the bounded "keep owning Tab" window after a final-chunk acceptance. The
     /// coordinator continues to own the timer and input-monitor effects around these transitions.
     var postExhaustionAcceptanceState = PostExhaustionAcceptanceState()
@@ -230,6 +235,10 @@ final class SuggestionCoordinator: ObservableObject {
 
         inputMonitor.onSuppressedSyntheticInput = { [weak self] in
             self?.handleSuppressedSyntheticInput()
+        }
+
+        inputMonitor.setCorrectionUndoHandler { [weak self] in
+            self?.undoMostRecentAutomaticCorrection() ?? false
         }
 
         // Fail-open preflight for the active accept tap. The tap should only route a matching key

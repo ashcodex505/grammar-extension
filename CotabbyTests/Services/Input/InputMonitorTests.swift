@@ -255,6 +255,49 @@ final class InputMonitorTests: XCTestCase {
         }
     }
 
+    func test_correctionUndoConsumesOnlyWhenHandlerSucceeds() {
+        runOnMainActor {
+            let monitor = InputMonitor(
+                permissionProvider: { false },
+                suppressionController: InputSuppressionController()
+            )
+            monitor.setCorrectionUndoHandler { true }
+            monitor.setCorrectionUndoInterceptionActive(true)
+
+            XCTAssertEqual(
+                monitor.resolveAcceptKeyDown(InputMonitorKeyEvent(keyCode: 51)),
+                .consume
+            )
+
+            monitor.setCorrectionUndoHandler { false }
+            XCTAssertEqual(
+                monitor.resolveAcceptKeyDown(InputMonitorKeyEvent(keyCode: 51)),
+                .passThrough
+            )
+        }
+    }
+
+    func test_correctionUndoDoesNotClaimModifiedBackspace() {
+        runOnMainActor {
+            let monitor = InputMonitor(
+                permissionProvider: { false },
+                suppressionController: InputSuppressionController()
+            )
+            monitor.setCorrectionUndoHandler {
+                XCTFail("Modified Backspace must not invoke correction undo.")
+                return true
+            }
+            monitor.setCorrectionUndoInterceptionActive(true)
+
+            XCTAssertEqual(
+                monitor.resolveAcceptKeyDown(
+                    InputMonitorKeyEvent(keyCode: 51, flags: .maskCommand)
+                ),
+                .notHandled
+            )
+        }
+    }
+
     func test_isWordAcceptKey_matchesOnlyTheConfiguredWordAcceptBinding() {
         runOnMainActor {
             let monitor = makeMonitor()

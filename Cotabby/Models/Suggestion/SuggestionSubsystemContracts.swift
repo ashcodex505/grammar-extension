@@ -81,6 +81,17 @@ protocol SuggestionInputMonitoring: AnyObject {
     /// a suggestion overlay is visible and off otherwise, so Cotabby only sits in the synchronous
     /// keystroke path during the brief windows it actually needs to consume the accept key.
     func setAcceptInterceptionActive(_ active: Bool)
+
+    /// Configures the narrow Apple-style "Backspace reverts my last automatic correction" path.
+    /// The active tap consumes Backspace only when the handler validates and performs the undo.
+    func setCorrectionUndoHandler(_ handler: (@MainActor () -> Bool)?)
+    func setCorrectionUndoInterceptionActive(_ active: Bool)
+}
+
+extension SuggestionInputMonitoring {
+    /// Test doubles and alternate monitors that do not consume correction undo can safely no-op.
+    func setCorrectionUndoHandler(_ handler: (@MainActor () -> Bool)?) {}
+    func setCorrectionUndoInterceptionActive(_ active: Bool) {}
 }
 
 /// The emoji picker's slice of the input monitor. Kept separate from `SuggestionInputMonitoring` so

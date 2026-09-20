@@ -51,6 +51,9 @@ enum InputMonitorAcceptTapDecision: Equatable {
 final class InputMonitor {
     var onEvent: ((CapturedInputEvent) -> Bool)?
     var onSuppressedSyntheticInput: (() -> Void)?
+    /// Invoked synchronously for an immediate unmodified Backspace after Cotabby autocorrected.
+    /// Returning false fails open and leaves the physical Backspace untouched.
+    private var correctionUndoHandler: (@MainActor () -> Bool)?
 
     /// Reports physical pointer-down locations from the existing listen-only tap. The Calendar AX
     /// compatibility guard uses this to pause focus-tree reads before Calendar handles its fragile
@@ -128,6 +131,7 @@ final class InputMonitor {
     /// "emoji capture open" state directly to exercise observer routing without installing real taps.
     /// Production only mutates this through `setCaptureInterceptionActive(_:)`.
     var captureInterceptionActive = false
+    private var correctionUndoInterceptionActive = false
 
     init(
         permissionProvider: @escaping @MainActor () -> Bool,
@@ -208,12 +212,22 @@ final class InputMonitor {
         updateAcceptTapState()
     }
 
+    func setCorrectionUndoHandler(_ handler: (@MainActor () -> Bool)?) {
+        correctionUndoHandler = handler
+    }
+
+    func setCorrectionUndoInterceptionActive(_ active: Bool) {
+        correctionUndoInterceptionActive = active
+        updateAcceptTapState()
+    }
+
     /// Installs the active tap when either reason wants it and tears it down otherwise. Recomputes
     /// accept-key ownership: only a visible suggestion claims the accept key at the observer layer.
     /// When the tap exists solely for emoji capture, the observer must keep routing the accept key
     /// (Tab) to the coordinator so the emoji controller — not the suggestion accept path — acts on it.
     private func updateAcceptTapState() {
-        let wantsTap = permissionProvider() && (suggestionInterceptionActive || captureInterceptionActive)
+        let wantsTap = permissionProvider()
+            && (suggestionInterceptionActive || captureInterceptionActive || correctionUndoInterceptionActive)
         // Only a visible suggestion claims the accept key at the observer layer. When the tap exists
         // solely for emoji capture, the observer must keep routing the accept key (Tab) to the
         // coordinator so the emoji controller — not the suggestion accept path — acts on it. Setting
@@ -230,7 +244,9 @@ final class InputMonitor {
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.acceptTapTeardownDelaySeconds) { [weak self] in
                 guard let self else { return }
                 let stillWanted = self.permissionProvider()
-                    && (self.suggestionInterceptionActive || self.captureInterceptionActive)
+                    && (self.suggestionInterceptionActive
+                        || self.captureInterceptionActive
+                        || self.correctionUndoInterceptionActive)
                 guard !stillWanted else { return }
                 self.destroyAcceptTap()
             }
@@ -587,6 +603,11 @@ final class InputMonitor {
                 return decision
             }
         }
+        if correctionUndoInterceptionActive,
+           keyEvent.keyCode == 51,
+           ShortcutModifierMask(eventFlags: keyEvent.flags).isEmpty {
+            return correctionUndoHandler?() == true ? .consume : .passThrough
+        }
         return handleAcceptKeyDown(keyEvent)
     }
 
@@ -639,6 +660,14 @@ final class InputMonitor {
     }
 
     private func routeObserverKeyDown(_ keyEvent: InputMonitorKeyEvent) -> CapturedInputEvent? {
+        // The active tap owns the immediate correction-undo Backspace. Do not let the listen-only
+        // observer clear the transaction before the same physical event reaches that consuming tap.
+        if correctionUndoInterceptionActive,
+           keyEvent.keyCode == 51,
+           ShortcutModifierMask(eventFlags: keyEvent.flags).isEmpty {
+            return nil
+        }
+
         // While an emoji capture is open, the accept key must reach the observer's `onEvent` so the
         // emoji controller can commit on it. The emoji commit fires from the listen-only observer pass
         // (the accept tap only swallows the key afterward), so suppressing the accept key here — which
