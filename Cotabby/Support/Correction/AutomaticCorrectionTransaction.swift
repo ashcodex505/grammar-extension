@@ -36,8 +36,28 @@ nonisolated struct RejectedCorrectionOccurrence: Equatable, Sendable {
     let focusChangeSequence: UInt64
 
     func matches(_ match: PersonalCorrectionIndex.Match, context: FocusedInputSnapshot) -> Bool {
-        originalText == match.matchedText
-            && replacementText == match.replacementText
+        matches(
+            sourceText: match.matchedText,
+            replacementText: match.replacementText,
+            context: context
+        )
+    }
+
+    func matches(_ match: PersonalCorrectionIndex.LearnedMatch, context: FocusedInputSnapshot) -> Bool {
+        matches(
+            sourceText: match.sourceText,
+            replacementText: match.replacementText,
+            context: context
+        )
+    }
+
+    private func matches(
+        sourceText: String,
+        replacementText: String,
+        context: FocusedInputSnapshot
+    ) -> Bool {
+        originalText == sourceText
+            && self.replacementText == replacementText
             && bundleIdentifier == context.bundleIdentifier
             && elementIdentifier == context.elementIdentifier
             && focusChangeSequence == context.focusChangeSequence

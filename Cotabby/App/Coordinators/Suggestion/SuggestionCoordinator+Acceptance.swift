@@ -149,6 +149,11 @@ extension SuggestionCoordinator {
         // throttle window. Stamp the acceptance so the stability gate can scope its
         // backward-drift hold to the frames-catching-up window.
         lastAcceptanceAt = Date()
+        personalCorrections.recordAppliedCorrection(
+            source: typoWord,
+            destination: session.fullText,
+            bundleIdentifier: rawContext.bundleIdentifier
+        )
         focusModel.invalidateTransientCaretCaches()
 
         cancelPredictionWork()

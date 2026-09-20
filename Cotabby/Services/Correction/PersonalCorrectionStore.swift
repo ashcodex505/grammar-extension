@@ -23,6 +23,10 @@ nonisolated actor PersonalCorrectionStore {
         self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: fileManager)
     }
 
+    func hasStoredDatabase() -> Bool {
+        fileManager.fileExists(atPath: fileURL.path)
+    }
+
     func load() throws -> PersonalCorrectionDatabase {
         guard fileManager.fileExists(atPath: fileURL.path) else {
             return PersonalCorrectionDatabase()

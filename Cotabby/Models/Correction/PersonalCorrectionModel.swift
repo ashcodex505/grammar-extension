@@ -123,8 +123,14 @@ final class PersonalCorrectionModel: ObservableObject {
     }
 
     private func load() async {
+        var installedStarterDefaults = false
         do {
-            let loaded = try await store.load()
+            let isFirstLaunch = !(await store.hasStoredDatabase())
+            var loaded = try await store.load()
+            if isFirstLaunch {
+                loaded.rules = PersonalCorrectionDefaults.rules
+                installedStarterDefaults = true
+            }
             database = hasMutationsBeforeInitialLoad
                 ? Self.merging(loaded, with: database)
                 : loaded
@@ -134,7 +140,7 @@ final class PersonalCorrectionModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
         isLoaded = true
-        if hasMutationsBeforeInitialLoad {
+        if hasMutationsBeforeInitialLoad || installedStarterDefaults {
             hasMutationsBeforeInitialLoad = false
             didMutateDatabase()
         }

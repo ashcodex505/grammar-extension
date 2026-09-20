@@ -489,7 +489,8 @@ extension SuggestionCoordinator {
             bestCorrection: {
                 bestCorrection(
                     for: $0,
-                    precedingText: rawContext.precedingText
+                    precedingText: rawContext.precedingText,
+                    bundleIdentifier: rawContext.bundleIdentifier
                 )
             }
         ) {
@@ -531,33 +532,62 @@ extension SuggestionCoordinator {
         rawContext: FocusedInputSnapshot,
         workID: UInt64
     ) -> Bool {
-        guard let match = personalCorrections.index.committedMatch(
+        if let match = personalCorrections.index.committedMatch(
+            precedingText: rawContext.precedingText,
+            bundleIdentifier: rawContext.bundleIdentifier
+        ) {
+            if rejectedCorrectionOccurrence?.matches(match, context: rawContext) == true {
+                rejectedCorrectionOccurrence = nil
+                clearSuggestion()
+                hideOverlay(reason: "Overlay hidden because the user reverted this correction occurrence.")
+                state = .idle
+                return true
+            }
+
+            switch match.rule.action {
+            case .automatic:
+                applyAutomaticCorrection(
+                    typoWord: match.matchedText,
+                    correctedWord: match.replacementText,
+                    rawContext: rawContext,
+                    workID: workID
+                )
+            case .offer:
+                presentCorrection(
+                    typoWord: match.matchedText,
+                    correctedWord: match.replacementText,
+                    rawContext: rawContext,
+                    workID: workID
+                )
+            }
+            return true
+        }
+
+        guard let learnedMatch = personalCorrections.index.committedLearnedMatch(
             precedingText: rawContext.precedingText,
             bundleIdentifier: rawContext.bundleIdentifier
         ) else {
             return false
         }
-
-        if rejectedCorrectionOccurrence?.matches(match, context: rawContext) == true {
+        if rejectedCorrectionOccurrence?.matches(learnedMatch, context: rawContext) == true {
             rejectedCorrectionOccurrence = nil
             clearSuggestion()
-            hideOverlay(reason: "Overlay hidden because the user reverted this correction occurrence.")
+            hideOverlay(reason: "Overlay hidden because the user reverted this learned correction occurrence.")
             state = .idle
             return true
         }
-
-        switch match.rule.action {
+        switch learnedMatch.action {
         case .automatic:
             applyAutomaticCorrection(
-                typoWord: match.matchedText,
-                correctedWord: match.replacementText,
+                typoWord: learnedMatch.sourceText,
+                correctedWord: learnedMatch.replacementText,
                 rawContext: rawContext,
                 workID: workID
             )
         case .offer:
             presentCorrection(
-                typoWord: match.matchedText,
-                correctedWord: match.replacementText,
+                typoWord: learnedMatch.sourceText,
+                correctedWord: learnedMatch.replacementText,
                 rawContext: rawContext,
                 workID: workID
             )
@@ -569,7 +599,11 @@ extension SuggestionCoordinator {
     /// separate because frequency counts from different corpora are not comparable. Ambiguous
     /// multilingual context, a cold index, or a missing SymSpell candidate all fall back to the
     /// user's automatic-language macOS spell checker.
-    private func bestCorrection(for word: String, precedingText: String) -> String? {
+    private func bestCorrection(
+        for word: String,
+        precedingText: String,
+        bundleIdentifier: String?
+    ) -> String? {
         let enabledLanguages = SpellingDictionaryCatalog.languages(
             for: settingsSnapshot.enabledSpellingDictionaryCodes
         )
@@ -578,11 +612,39 @@ extension SuggestionCoordinator {
             currentWord: word,
             enabledLanguages: enabledLanguages
         ) else {
-            return spellChecker.bestCorrection(for: word)
+            return firstAllowedNativeCorrection(for: word, bundleIdentifier: bundleIdentifier)
         }
 
-        return symSpellCorrector.bestCorrection(for: word, language: language)
-            ?? spellChecker.bestCorrection(for: word)
+        if let candidate = symSpellCorrector.bestCorrection(for: word, language: language),
+           !personalCorrections.index.blocks(
+               source: word,
+               destination: candidate,
+               bundleIdentifier: bundleIdentifier
+           ) {
+            return candidate
+        }
+        return firstAllowedNativeCorrection(for: word, bundleIdentifier: bundleIdentifier)
+    }
+
+    private func firstAllowedNativeCorrection(
+        for word: String,
+        bundleIdentifier: String?
+    ) -> String? {
+        spellChecker.nativeCorrections(for: word)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter {
+                !$0.isEmpty
+                    && $0.lowercased() != word.lowercased()
+                    && !$0.contains(" ")
+            }
+            .map { TypoCaseTransfer.applying(caseOf: word, to: $0) }
+            .first {
+                !personalCorrections.index.blocks(
+                    source: word,
+                    destination: $0,
+                    bundleIdentifier: bundleIdentifier
+                )
+            }
     }
 
     /// Collapses native typo detection and correction availability into the seam guard's single

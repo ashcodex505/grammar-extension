@@ -20,6 +20,7 @@ nonisolated struct PersonalCorrectionRule: Codable, Equatable, Hashable, Identif
     enum Source: String, Codable, Sendable {
         case manual
         case imported
+        case bundledStarter
         case learned
         case macOSTextReplacement
     }
