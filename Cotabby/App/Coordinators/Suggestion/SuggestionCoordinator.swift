@@ -165,7 +165,7 @@ final class SuggestionCoordinator: ObservableObject {
         spellChecker: CurrentWordSpellChecker,
         symSpellCorrector: SymSpellCorrector,
         spellingLanguageResolver: SpellingLanguageResolver = SpellingLanguageResolver(),
-        personalCorrections: PersonalCorrectionModel = PersonalCorrectionModel(),
+        personalCorrections: PersonalCorrectionModel? = nil,
         qualityMetricsStore: SuggestionQualityMetricsStore,
         userDefaults: UserDefaults = .standard
     ) {
@@ -189,7 +189,7 @@ final class SuggestionCoordinator: ObservableObject {
         self.spellChecker = spellChecker
         self.symSpellCorrector = symSpellCorrector
         self.spellingLanguageResolver = spellingLanguageResolver
-        self.personalCorrections = personalCorrections
+        self.personalCorrections = personalCorrections ?? PersonalCorrectionModel()
         self.qualityMetricsStore = qualityMetricsStore
         self.userDefaults = userDefaults
         settingsSnapshot = suggestionSettings.snapshot

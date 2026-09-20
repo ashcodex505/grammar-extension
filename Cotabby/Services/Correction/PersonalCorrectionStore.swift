@@ -3,7 +3,7 @@ import Foundation
 /// Serializes the user-owned correction database to Application Support. The store is an actor so
 /// file I/O and read-modify-write transactions cannot race; the typing path never calls it directly
 /// and instead consumes an immutable in-memory index published by `PersonalCorrectionModel`.
-nonisolated actor PersonalCorrectionStore {
+actor PersonalCorrectionStore {
     enum StoreError: LocalizedError {
         case unsupportedVersion(Int)
 
