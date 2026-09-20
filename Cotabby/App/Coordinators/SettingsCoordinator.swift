@@ -15,6 +15,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
     private let permissionManager: PermissionManager
     private let permissionGuidanceController: PermissionGuidanceController
     private let suggestionSettings: SuggestionSettingsModel
+    private let personalCorrections: PersonalCorrectionModel
     private let openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     private let foundationModelAvailabilityService: FoundationModelAvailabilityService
     private let runtimeModel: RuntimeBootstrapModel
@@ -40,6 +41,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
         permissionManager: PermissionManager,
         permissionGuidanceController: PermissionGuidanceController,
         suggestionSettings: SuggestionSettingsModel,
+        personalCorrections: PersonalCorrectionModel,
         openAICompatibleConnectionModel: OpenAICompatibleConnectionModel,
         foundationModelAvailabilityService: FoundationModelAvailabilityService,
         runtimeModel: RuntimeBootstrapModel,
@@ -55,6 +57,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
         self.permissionManager = permissionManager
         self.permissionGuidanceController = permissionGuidanceController
         self.suggestionSettings = suggestionSettings
+        self.personalCorrections = personalCorrections
         self.openAICompatibleConnectionModel = openAICompatibleConnectionModel
         self.foundationModelAvailabilityService = foundationModelAvailabilityService
         self.runtimeModel = runtimeModel
@@ -84,6 +87,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
                     permissionManager: permissionManager,
                     permissionGuidanceController: permissionGuidanceController,
                     suggestionSettings: suggestionSettings,
+                    personalCorrections: personalCorrections,
                     openAICompatibleConnectionModel: openAICompatibleConnectionModel,
                     foundationModelAvailabilityService: foundationModelAvailabilityService,
                     runtimeModel: runtimeModel,

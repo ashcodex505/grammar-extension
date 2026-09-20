@@ -99,8 +99,8 @@ nonisolated enum CorrectionImportParser {
             if !parsedAny {
                 issues.append(Issue(
                     line: lineNumber,
-                    severity: .error,
-                    message: "Expected a replacement pair such as ‘teh -> the’ or ‘teh:the’."
+                    severity: .warning,
+                    message: "Skipped this line because it is not a replacement pair such as ‘teh -> the’."
                 ))
             }
         }
@@ -184,8 +184,8 @@ nonisolated enum CorrectionImportParser {
             guard fields.count >= 2 else {
                 issues.append(Issue(
                     line: offset + 1,
-                    severity: .error,
-                    message: "Expected at least two columns: trigger and replacement."
+                    severity: .warning,
+                    message: "Skipped this row because it needs trigger and replacement columns."
                 ))
                 continue
             }
@@ -232,28 +232,28 @@ nonisolated enum CorrectionImportParser {
         let trigger = PersonalCorrectionRule.normalizedDisplayText(rawTrigger)
         let replacement = PersonalCorrectionRule.normalizedDisplayText(rawReplacement)
         guard !trigger.isEmpty, !replacement.isEmpty else {
-            issues.append(Issue(line: line, severity: .error, message: "Trigger and replacement must not be empty."))
+            issues.append(Issue(line: line, severity: .warning, message: "Skipped an empty trigger or replacement."))
             return
         }
         guard trigger != replacement else {
-            issues.append(Issue(line: line, severity: .error, message: "Trigger and replacement are identical."))
+            issues.append(Issue(line: line, severity: .warning, message: "Skipped an identical trigger and replacement."))
             return
         }
         guard replacement.contains(where: { $0.isLetter || $0.isNumber || $0.isSymbol }) else {
             issues.append(Issue(
                 line: line,
-                severity: .error,
-                message: "The replacement must contain a letter, number, or symbol instead of punctuation alone."
+                severity: .warning,
+                message: "Skipped this pair because the replacement is punctuation alone."
             ))
             return
         }
         guard trigger.count <= 200, replacement.count <= 500 else {
-            issues.append(Issue(line: line, severity: .error, message: "The pair exceeds the safe import length."))
+            issues.append(Issue(line: line, severity: .warning, message: "Skipped a pair exceeding the safe import length."))
             return
         }
         guard !trigger.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
               !replacement.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains) else {
-            issues.append(Issue(line: line, severity: .error, message: "Replacement pairs cannot contain control characters."))
+            issues.append(Issue(line: line, severity: .warning, message: "Skipped a pair containing control characters."))
             return
         }
 

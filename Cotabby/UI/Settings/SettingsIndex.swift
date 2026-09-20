@@ -260,9 +260,11 @@ enum SettingsItem: String, CaseIterable, Identifiable {
             return .appearance
         case .emojiPicker, .emojiSkinTone, .emojiPeopleStyle, .emojiHistory:
             return .emoji
-        case .length, .acceptPunctuation, .addSpaceAfterAccept, .name, .languages, .customRules,
-             .hideSuggestionsOnTypo, .offerTypoCorrections, .spellingDictionaries, .automaticallyFixTypos:
+        case .length, .acceptPunctuation, .addSpaceAfterAccept, .name, .languages, .customRules:
             return .writing
+        case .hideSuggestionsOnTypo, .offerTypoCorrections, .spellingDictionaries,
+             .automaticallyFixTypos:
+            return .corrections
         case .extendedContext, .contextLivePreview:
             return .context
         case .engine, .appleIntelligenceAvailability, .modelStatus, .selectedModel,

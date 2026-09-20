@@ -17,6 +17,7 @@ struct SettingsContainerView: View {
     @ObservedObject var permissionManager: PermissionManager
     let permissionGuidanceController: PermissionGuidanceController
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
+    @ObservedObject var personalCorrections: PersonalCorrectionModel
     @ObservedObject var openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     @ObservedObject var foundationModelAvailabilityService: FoundationModelAvailabilityService
     @ObservedObject var runtimeModel: RuntimeBootstrapModel
@@ -142,6 +143,11 @@ struct SettingsContainerView: View {
             )
         case .writing:
             WritingPaneView(suggestionSettings: suggestionSettings)
+        case .corrections:
+            CorrectionsPaneView(
+                suggestionSettings: suggestionSettings,
+                personalCorrections: personalCorrections
+            )
         case .context:
             ContextPaneView(suggestionSettings: suggestionSettings)
         case .shortcuts:

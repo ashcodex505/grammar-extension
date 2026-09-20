@@ -16,6 +16,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
     case appearance
     case emoji
     case writing
+    case corrections
     case context
     case engineAndModel
     case shortcuts
@@ -33,6 +34,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
         case .appearance: return "Appearance"
         case .emoji: return "Emoji"
         case .writing: return "Writing"
+        case .corrections: return "Corrections"
         case .context: return "Context"
         case .engineAndModel: return "Engine & Model"
         case .shortcuts: return "Shortcuts"
@@ -51,6 +53,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
         case .appearance: return "paintbrush.fill"
         case .emoji: return "face.smiling"
         case .writing: return "square.and.pencil"
+        case .corrections: return "text.badge.checkmark"
         case .context: return "doc.text"
         case .engineAndModel: return "cpu.fill"
         case .shortcuts: return "keyboard.fill"
@@ -71,6 +74,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
         case .appearance: return .purple
         case .emoji: return .yellow
         case .writing: return .indigo
+        case .corrections: return .green
         case .context: return .teal
         case .engineAndModel: return .orange
         case .shortcuts: return .pink
@@ -88,7 +92,8 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
         case .general: return "Core toggles and behavior"
         case .appearance: return "Ghost text style and display"
         case .emoji: return "The inline emoji picker"
-        case .writing: return "Length, profile, and corrections"
+        case .writing: return "Length, profile, and languages"
+        case .corrections: return "Autocorrect, personal rules, and vocabulary"
         case .context: return "What the model can reference"
         case .engineAndModel: return "Choose the engine and models"
         case .shortcuts: return "Keys that accept suggestions"
@@ -106,7 +111,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
     static let sidebarGroups: [[SettingsCategory]] = [
         [.home],
         [.general, .appearance, .emoji],
-        [.writing, .context, .engineAndModel],
+        [.writing, .corrections, .context, .engineAndModel],
         [.shortcuts, .apps, .permissions],
         [.performance, .about]
     ]

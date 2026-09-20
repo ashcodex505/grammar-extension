@@ -232,6 +232,7 @@ final class CotabbyAppEnvironment {
             permissionManager: permissionManager,
             permissionGuidanceController: permissionGuidanceController,
             suggestionSettings: suggestionSettings,
+            personalCorrections: personalCorrections,
             openAICompatibleConnectionModel: openAICompatibleConnectionModel,
             foundationModelAvailabilityService: foundationModelAvailabilityService,
             runtimeModel: runtimeModel,

@@ -29,7 +29,7 @@ struct HomePaneView: View {
     /// The panes offered as quick links. Power, engine, and permissions already live in the
     /// status row above, so the grid covers the everyday customization surfaces.
     private static let quickLinkCategories: [SettingsCategory] = [
-        .appearance, .writing, .shortcuts, .emoji, .apps, .performance
+        .appearance, .writing, .corrections, .shortcuts, .apps, .performance
     ]
 
     private static let maximumSearchResults = 12

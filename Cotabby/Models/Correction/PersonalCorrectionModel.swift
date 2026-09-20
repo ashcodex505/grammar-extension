@@ -69,6 +69,18 @@ final class PersonalCorrectionModel: ObservableObject {
         didMutateDatabase()
     }
 
+    func removeVocabulary(id: UUID) {
+        guard let entry = database.vocabulary.first(where: { $0.id == id }) else { return }
+        database.vocabulary.removeAll(where: { $0.id == id })
+        if entry.syncWithMacOSDictionary { NSSpellChecker.shared.unlearnWord(entry.word) }
+        didMutateDatabase()
+    }
+
+    func clearLearnedCorrections() {
+        database.learnedCorrections.removeAll()
+        didMutateDatabase()
+    }
+
     /// Same-scope triggers are replaced by the imported rule. A preview containing errors is never
     /// committed, so import remains an all-or-nothing user action.
     func commitImport(_ preview: CorrectionImportParser.Preview) {
