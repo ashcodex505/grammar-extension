@@ -1,42 +1,63 @@
 
 <p align="center">
-  <a href="https://cotabby.app" target="_blank">
-    <img height="150" alt="Cotabby logo" src=".github/assets/readme/logo.png" />
+  <a href="https://github.com/ashcodex505/grammar-extension" target="_blank">
+    <img height="150" alt="Cotabby Extended red logo" src="Cotabby/Assets.xcassets/AppIconDev.appiconset/1024.png" />
   </a>
 </p>
 
-<h1 align="center">Cotabby [beta]</h1>
+<h1 align="center">Cotabby Extended [beta]</h1>
 
-<p align="center"><em>Open-source, local-first AI autocomplete for macOS.</em></p>
-
-<p align="center">
-  <a href="https://cotabby.app">
-  <img width="200" alt="landing-page" src="https://github.com/user-attachments/assets/c28fbb4b-6dfb-4403-a040-1df61daf4df2" /></a>
-  
-
-<a href="https://github.com/FuJacob/cotabby/releases/latest/download/Cotabby.dmg">
-<img width="200" alt="download" src="https://github.com/user-attachments/assets/d5cb4454-d2ab-41d3-9d36-171d44ebfc52" /></a>
-
-
-<a href="https://ko-fi.com/cotabby" target="_blank">
-<img width="200" alt="support" src=".github/assets/readme/support-cotabby.png" />
-</a></p>
+<p align="center"><em>Personal, learning autocorrection and local-first AI autocomplete for macOS.</em></p>
 
 <p align="center">
-  <a href="https://github.com/FuJacob/cotabby/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/FuJacob/cotabby/build.yml?branch=main" /></a>
+  Extended and maintained by <a href="https://github.com/ashcodex505"><strong>Ashish Kurse</strong></a>.
+</p>
+
+<p align="center">
+  Based on <a href="https://github.com/FuJacob/cotabby">the original Cotabby project by FuJacob and contributors</a>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/ashcodex505/grammar-extension/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ashcodex505/grammar-extension/build.yml?branch=main" /></a>
   <a href="LICENSE"><img alt="License: AGPL v3" src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" /></a>
-  <a href="https://github.com/FuJacob/cotabby/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/FuJacob/cotabby" /></a>
-  <a href="https://github.com/FuJacob/cotabby/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/FuJacob/cotabby/total" /></a>
-  <a href="https://github.com/FuJacob/cotabby/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/FuJacob/cotabby?style=flat" /></a>
+  <a href="https://github.com/ashcodex505/grammar-extension/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/ashcodex505/grammar-extension?style=flat" /></a>
   <img alt="Swift" src="https://img.shields.io/badge/Swift-F05138?logo=swift&amp;logoColor=white" />
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey" />
 </p>
 
 <p align="center">
-  <sub>Cotabby is free and open-source — maintained by two students. If it's useful to you, please consider supporting Cotabby's future.</sub>
+  <sub>This fork keeps Cotabby's original autocomplete experience and adds a user-owned autocorrection system focused on control, learning, privacy, and safe reversal.</sub>
 </p>
 
 ---
+
+## What This Fork Adds
+
+The original Cotabby provides the menu-bar app, Accessibility integration, inline suggestion UI,
+Apple Intelligence support, downloadable local-model runtime, and deterministic spell-checking
+foundation. Ashish Kurse built on that foundation with a personal autocorrection layer that runs
+before the generic spell checker.
+
+- **Editable personal replacements** — add typo-to-correction rules directly in Settings, including
+  valid words (`form` → `from`), contractions (`im` → `I'm`), single letters (`u` → `you`), names,
+  and multi-word phrases (`get chat` → `this chat`).
+- **74 starter corrections** — the supplied typo list is installed as editable rules on first launch.
+- **Personal vocabulary** — teach Cotabby words it must accept, with optional synchronization to the
+  macOS learned-word dictionary.
+- **Flexible imports** — preview and import JSON, CSV, TSV, Markdown-style lists, `word:replacement`,
+  and `word -> replacement` files, with warnings and conflict detection before anything changes.
+- **Import macOS replacements** — bring existing system text replacements into Cotabby.
+- **Local learning** — accepted corrections progress from observed, to suggestion-only, to trusted;
+  repeatedly reverted candidates become blocked for that application.
+- **Immediate Backspace undo** — reverse an automatic correction only when the app, field, focus
+  generation, and adjacent corrected text still match, preventing stale edits in another field.
+- **Complete backups** — export and restore rules, vocabulary, and learning history as versioned JSON.
+- **Fast and private matching** — the typing path uses an immutable in-memory index and stores only
+  correction pairs and counters, never the surrounding sentences.
+
+Explicit personal rules take priority, followed by trusted learned corrections, SymSpell, and the
+macOS spell checker. Longest matching phrases win, and all automatic changes happen only at a
+committed word boundary.
 
 ## What It Does
 
@@ -65,7 +86,10 @@ required. An optional OpenAI-compatible engine can connect to a server you confi
 - **Ghost-text autocomplete** — AI suggestions inline in almost any macOS text field; `Tab` accepts a word at a time
 - **Emoji autocomplete** — type `:rocket:` and accept it without leaving the field
 - **Inline macros** — type `/` for quick math, unit and currency conversion, dates, and random values
-- **One-key autocorrect** — fix a likely typo with a single keystroke
+- **Personal autocorrect** — create exact word or phrase replacements that run before generic spelling
+- **Learning corrections** — repeated acceptance raises confidence while Backspace reversals lower it
+- **Personal vocabulary** — keep names, product terms, and deliberate spellings from being corrected
+- **One-key correction** — accept an offered spelling fix with a single keystroke
 
 ## Privacy
 
@@ -119,22 +143,31 @@ For the full suggestion pipeline, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 </details>
 
-## Install
+## Build and Run This Fork
 
 **Compatibility:** macOS 14.0 or later. The Apple Intelligence engine needs macOS 26 or later on a supported Mac; on older systems, use the Open Source engine.
 
-### Homebrew
+Clone Ashish's repository and build the separate red `Cotabby Dev` application:
 
-```sh
-brew tap FuJacob/cotabby
-brew install --cask cotabby
+```bash
+git clone https://github.com/ashcodex505/grammar-extension.git
+cd grammar-extension
+open Cotabby.xcodeproj
 ```
 
-Upgrade later with `brew upgrade --cask cotabby`. The tap lives at [FuJacob/homebrew-cotabby](https://github.com/FuJacob/homebrew-cotabby).
+In Xcode, select the **Cotabby Dev** scheme and your Mac as the destination, then build and run.
+The red development identity is separate from the original blue Cotabby app, so macOS keeps its
+Accessibility and Input Monitoring permissions separate.
 
-### Manual download
+For a command-line development build:
 
-Grab the latest release from [cotabby.app](https://cotabby.app) and drag Cotabby into your Applications folder.
+```bash
+./scripts/build_and_run.sh --verify
+```
+
+The original Cotabby release and Homebrew package remain available from
+[FuJacob/cotabby](https://github.com/FuJacob/cotabby). Those install the upstream blue app, not the
+extended red development build in this repository.
 
 ## Using Cotabby
 
@@ -161,8 +194,8 @@ Cotabby blocks generation, presentation, and insertion in password and other sec
 Requires Xcode and Command Line Tools. Apple Silicon is strongly recommended for local model performance. For setup, build, test, and contribution workflow details, start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
-git clone https://github.com/FuJacob/cotabby.git Cotabby
-cd Cotabby
+git clone https://github.com/ashcodex505/grammar-extension.git
+cd grammar-extension
 open Cotabby.xcodeproj
 ```
 
@@ -174,6 +207,8 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, bui
 
 ## Acknowledgments
 
+- [FuJacob/cotabby](https://github.com/FuJacob/cotabby) and its maintainers for the original app,
+  architecture, macOS integration, autocomplete pipeline, model runtime, and design this fork builds on.
 - [llama.cpp](https://github.com/ggerganov/llama.cpp), [CotabbyInference](https://github.com/FuJacob/cotabbyinference), [Sparkle](https://github.com/sparkle-project/Sparkle), and [swift-log](https://github.com/apple/swift-log) for runtime, updates, and logging.
 - Apple's FoundationModels, Accessibility, SwiftUI, and AppKit for on-device generation and macOS integration.
 - [GitHub gemoji](https://github.com/github/gemoji) and Hugging Face for the emoji data and downloadable models.
@@ -182,7 +217,15 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, bui
 
 ## Created by
 
-Originally created by <a href="https://github.com/FuJacob">@FuJacob</a>, now developed and maintained by <a href="https://github.com/FuJacob">@FuJacob</a>, <a href="https://github.com/jam-cai">@jam-cai</a>. and <a href="https://github.com/akramj13">@akramj13</a>
+**Cotabby Extended** is developed and maintained by
+<a href="https://github.com/ashcodex505">Ashish Kurse (@ashcodex505)</a>.
+
+It is a derivative of the original
+<a href="https://github.com/FuJacob/cotabby">Cotabby</a>, created by
+<a href="https://github.com/FuJacob">@FuJacob</a> and developed with
+<a href="https://github.com/jam-cai">@jam-cai</a> and
+<a href="https://github.com/akramj13">@akramj13</a>. This fork preserves that attribution while
+documenting Ashish's personal dictionary, import/export, safe undo, and local-learning additions.
 
 ## License
 
