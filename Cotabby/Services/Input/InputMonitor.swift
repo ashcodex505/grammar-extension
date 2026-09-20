@@ -122,10 +122,10 @@ final class InputMonitor {
     /// global event taps.
     var isAcceptTapOwningAcceptKeys = false
 
-    /// The two independent reasons to keep the active tap installed. A visible suggestion needs to
-    /// consume the accept key; an in-progress emoji capture needs to consume navigation and commit
-    /// keys. Tracking them separately means neither feature removes the tap while the other still
-    /// needs it, and the tap is gone entirely when both are idle (the issue #328 invariant).
+    /// Independent reasons to keep the active tap installed: a visible suggestion, an in-progress
+    /// emoji capture, or the short immediate-Backspace autocorrection undo window. Tracking them
+    /// separately means no feature removes the tap while another still needs it, and the tap is gone
+    /// entirely when all three are idle (the issue #328 invariant).
     private var suggestionInterceptionActive = false
     /// Internal (not private) for the same reason as `isAcceptTapOwningAcceptKeys`: tests stage the
     /// "emoji capture open" state directly to exercise observer routing without installing real taps.
@@ -221,7 +221,7 @@ final class InputMonitor {
         updateAcceptTapState()
     }
 
-    /// Installs the active tap when either reason wants it and tears it down otherwise. Recomputes
+    /// Installs the active tap when any reason wants it and tears it down otherwise. Recomputes
     /// accept-key ownership: only a visible suggestion claims the accept key at the observer layer.
     /// When the tap exists solely for emoji capture, the observer must keep routing the accept key
     /// (Tab) to the coordinator so the emoji controller — not the suggestion accept path — acts on it.
@@ -238,9 +238,8 @@ final class InputMonitor {
             installAcceptTapIfNeeded()
         } else {
             // Defer only the mach-port invalidation, so a final-chunk accept's synthetic insertion can
-            // drain before the tap is removed (see `acceptTapTeardownDelaySeconds`). Re-check both
-            // reasons at fire time so a suggestion or an emoji capture that re-armed the tap during the
-            // delay keeps it installed.
+            // drain before the tap is removed (see `acceptTapTeardownDelaySeconds`). Re-check every
+            // reason at fire time so a feature that re-armed the tap during the delay keeps it installed.
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.acceptTapTeardownDelaySeconds) { [weak self] in
                 guard let self else { return }
                 let stillWanted = self.permissionProvider()

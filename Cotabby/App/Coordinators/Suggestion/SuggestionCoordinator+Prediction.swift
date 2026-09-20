@@ -576,21 +576,26 @@ extension SuggestionCoordinator {
             state = .idle
             return true
         }
-        switch learnedMatch.action {
-        case .automatic:
+        // Learned mappings come from generic spell-check decisions, so the generic correction
+        // switches remain authoritative. Explicit user-authored rules above are independent and
+        // retain their own per-rule Automatic/Offer action.
+        guard settingsSnapshot.suppressCompletionsOnTypo else { return false }
+        if learnedMatch.action == .automatic, settingsSnapshot.automaticallyFixTypos {
             applyAutomaticCorrection(
                 typoWord: learnedMatch.sourceText,
                 correctedWord: learnedMatch.replacementText,
                 rawContext: rawContext,
                 workID: workID
             )
-        case .offer:
+        } else if settingsSnapshot.offerTypoCorrections {
             presentCorrection(
                 typoWord: learnedMatch.sourceText,
                 correctedWord: learnedMatch.replacementText,
                 rawContext: rawContext,
                 workID: workID
             )
+        } else {
+            return false
         }
         return true
     }
