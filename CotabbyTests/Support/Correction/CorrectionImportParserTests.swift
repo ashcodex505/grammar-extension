@@ -48,4 +48,35 @@ final class CorrectionImportParserTests: XCTestCase {
         XCTAssertEqual(Set(preview.rules.map(\.trigger)), ["teh", "nad"])
         XCTAssertEqual(preview.errorCount, 0)
     }
+
+    func testExportedDatabaseImportRestoresVocabularyAndLearning() throws {
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        let database = PersonalCorrectionDatabase(
+            rules: [PersonalCorrectionRule(trigger: "teh", replacement: "the")],
+            vocabulary: [PersonalVocabularyEntry(word: "Cotabby")],
+            learnedCorrections: [LearnedCorrection(
+                source: "adn",
+                destination: "and",
+                languageCode: "en",
+                applicationBundleIdentifier: nil,
+                acceptedCount: 3,
+                revertedCount: 0,
+                dismissedCount: 0,
+                state: .trusted,
+                firstSeenAt: date,
+                lastSeenAt: date
+            )]
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+
+        let preview = CorrectionImportParser.parse(
+            data: try encoder.encode(database),
+            format: .json
+        )
+
+        XCTAssertEqual(preview.rules.map(\.trigger), ["teh"])
+        XCTAssertEqual(preview.vocabulary.map(\.word), ["Cotabby"])
+        XCTAssertEqual(preview.learnedCorrections.map(\.source), ["adn"])
+    }
 }

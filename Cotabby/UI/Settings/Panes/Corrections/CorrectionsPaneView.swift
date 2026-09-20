@@ -193,7 +193,9 @@ struct CorrectionsPaneView: View {
             if let importPreview {
                 CorrectionImportPreviewView(preview: importPreview) {
                     personalCorrections.commitImport(importPreview)
-                    operationMessage = "Imported \(importPreview.rules.count) replacement rules."
+                    operationMessage = "Imported \(importPreview.rules.count) rules, "
+                        + "\(importPreview.vocabulary.count) vocabulary words, and "
+                        + "\(importPreview.learnedCorrections.count) learned pairs."
                     isShowingImportPreview = false
                 } onCancel: {
                     isShowingImportPreview = false
@@ -365,7 +367,11 @@ private struct CorrectionImportPreviewView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Import Preview")
                 .font(.title2.bold())
-            Text("\(preview.rules.count) valid rules · \(preview.errorCount) errors · \(preview.warningCount) warnings")
+            Text(
+                "\(preview.rules.count) rules · \(preview.vocabulary.count) vocabulary words · "
+                    + "\(preview.learnedCorrections.count) learned pairs · "
+                    + "\(preview.errorCount) errors · \(preview.warningCount) warnings"
+            )
                 .foregroundStyle(.secondary)
 
             List {
@@ -376,6 +382,9 @@ private struct CorrectionImportPreviewView: View {
                             .foregroundStyle(.secondary)
                         Text(rule.replacement)
                     }
+                }
+                ForEach(preview.vocabulary) { entry in
+                    Label(entry.word, systemImage: "character.book.closed")
                 }
                 ForEach(preview.issues) { issue in
                     Label {
@@ -395,7 +404,12 @@ private struct CorrectionImportPreviewView: View {
                 Button("Cancel", action: onCancel)
                 Button("Import", action: onImport)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(preview.rules.isEmpty || preview.errorCount > 0)
+                    .disabled(
+                        preview.rules.isEmpty
+                            && preview.vocabulary.isEmpty
+                            && preview.learnedCorrections.isEmpty
+                        || preview.errorCount > 0
+                    )
             }
         }
         .padding(20)

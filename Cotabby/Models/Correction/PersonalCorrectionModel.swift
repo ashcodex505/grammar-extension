@@ -93,6 +93,23 @@ final class PersonalCorrectionModel: ObservableObject {
             })
             database.rules.append(imported)
         }
+        for imported in preview.vocabulary {
+            database.vocabulary.removeAll(where: {
+                $0.normalizedWord == imported.normalizedWord
+                    && $0.scope == imported.scope
+                    && $0.isCaseSensitive == imported.isCaseSensitive
+            })
+            database.vocabulary.append(imported)
+            if imported.syncWithMacOSDictionary { NSSpellChecker.shared.learnWord(imported.word) }
+        }
+        for imported in preview.learnedCorrections {
+            database.learnedCorrections.removeAll(where: {
+                $0.source == imported.source
+                    && $0.destination == imported.destination
+                    && $0.applicationBundleIdentifier == imported.applicationBundleIdentifier
+            })
+            database.learnedCorrections.append(imported)
+        }
         didMutateDatabase()
     }
 

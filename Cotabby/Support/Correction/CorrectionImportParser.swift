@@ -25,6 +25,20 @@ nonisolated enum CorrectionImportParser {
     struct Preview: Equatable, Sendable {
         var rules: [PersonalCorrectionRule]
         var issues: [Issue]
+        var vocabulary: [PersonalVocabularyEntry]
+        var learnedCorrections: [LearnedCorrection]
+
+        init(
+            rules: [PersonalCorrectionRule],
+            issues: [Issue],
+            vocabulary: [PersonalVocabularyEntry] = [],
+            learnedCorrections: [LearnedCorrection] = []
+        ) {
+            self.rules = rules
+            self.issues = issues
+            self.vocabulary = vocabulary
+            self.learnedCorrections = learnedCorrections
+        }
 
         var errorCount: Int { issues.count(where: { $0.severity == .error }) }
         var warningCount: Int { issues.count(where: { $0.severity == .warning }) }
@@ -131,12 +145,17 @@ nonisolated enum CorrectionImportParser {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         if let database = try? decoder.decode(PersonalCorrectionDatabase.self, from: data) {
-            return validated(database.rules.map { rule in
+            var preview = validated(database.rules.map { rule in
                 var imported = rule
                 imported.source = source
                 imported.updatedAt = Date()
                 return imported
             })
+            preview.vocabulary = database.vocabulary.filter { !$0.word.isEmpty }
+            preview.learnedCorrections = database.learnedCorrections.filter {
+                !$0.source.isEmpty && !$0.destination.isEmpty
+            }
+            return preview
         }
         if let rules = try? decoder.decode([PersonalCorrectionRule].self, from: data) {
             return validated(rules.map { rule in
