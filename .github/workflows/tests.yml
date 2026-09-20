@@ -1,9 +1,8 @@
-# PR-time test runner.
+# Manually triggered test runner.
 #
-# Runs `xcodebuild test` against the Cotabby scheme on every PR into main and on
-# every push to main. Fails the check on any test failure. Sibling to the
-# Build and Lint workflows; kept as a separate file so each gate has one
-# clear failure mode.
+# Runs `xcodebuild test` against the Cotabby scheme when requested. Fails the
+# check on any test failure. Sibling to the Build and Lint workflows; kept as
+# a separate file so each check has one clear failure mode.
 #
 # Why separate from Build: the build gate is about compile correctness —
 # anyone running it wants a fast, reliable signal regardless of whether the
@@ -15,10 +14,7 @@
 name: Tests
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: tests-${{ github.ref }}

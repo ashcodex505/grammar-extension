@@ -1,4 +1,4 @@
-# Tag-driven release pipeline for Cotabby.
+# Manually triggered release pipeline for Cotabby.
 #
 # Discrete jobs so a failure at one stage doesn't force a full re-run:
 #
@@ -13,12 +13,6 @@
 name: Release
 
 on:
-  push:
-    # Strict glob: matches v1.2.3 and v1.2.3-beta but NOT vv1.2.3, v0.0.0.0, or test.
-    # Defense in depth — the metadata step also enforces a SemVer regex below.
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-*"
   workflow_dispatch:
     inputs:
       release_version:
@@ -216,9 +210,9 @@ jobs:
             publish="${INPUT_PUBLISH:-false}"
           fi
 
-          # Reject malformed tags before we spend ~30 minutes signing and notarizing.
-          # The push-trigger glob filters most of this, but workflow_dispatch and
-          # any future trigger broadening should still hit this gate. Accepted forms:
+          # Reject malformed versions before we spend ~30 minutes signing and notarizing.
+          # Manual dispatch and any future trigger broadening should still hit this gate.
+          # Accepted forms:
           #   v1.2.3
           #   v1.2.3-beta, v1.2.3-beta.1, v1.2.3-rc.2, v1.2.3-alpha.10+build.5
           semver_re='^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'

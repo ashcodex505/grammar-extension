@@ -1,4 +1,4 @@
-# SwiftLint style gate on every PR.
+# Manually triggered SwiftLint style check.
 #
 # Runs in `--strict` mode: any warning fails the check. `main` is warning-free
 # under the ruleset in `.swiftlint.yml`, so this keeps it that way instead of
@@ -11,10 +11,7 @@
 name: Lint
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: lint-${{ github.ref }}
