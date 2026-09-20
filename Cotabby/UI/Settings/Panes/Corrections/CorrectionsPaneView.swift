@@ -67,25 +67,6 @@ struct CorrectionsPaneView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-                HStack(spacing: 10) {
-                    Image(systemName: "keyboard")
-                        .foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Quick Add from Selection")
-                            .font(.subheadline.weight(.medium))
-                        Text("Select text in any app, press Control–Shift–`, then enter its replacement.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Text("⌃⇧`")
-                        .font(.system(.body, design: .monospaced).weight(.semibold))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
-                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
-                        .accessibilityLabel("Control Shift backtick")
-                }
-
                 HStack(spacing: 8) {
                     TextField("Misspelling or phrase", text: $newTrigger)
                     Image(systemName: "arrow.right")

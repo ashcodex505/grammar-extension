@@ -26,6 +26,8 @@ final class CotabbyAppEnvironment {
     let personalCorrections: PersonalCorrectionModel
     /// Captures selected text and adds personal replacements through the global quick-add shortcut.
     let quickCorrectionController: QuickCorrectionController
+    /// Receives only the fixed quick-add chord from macOS; it does not observe ordinary typing.
+    let quickCorrectionHotKey: QuickCorrectionHotKey
     let openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     let foundationModelAvailabilityService: FoundationModelAvailabilityService
     let powerSourceMonitor: PowerSourceMonitor
@@ -70,6 +72,9 @@ final class CotabbyAppEnvironment {
         let quickCorrectionController = QuickCorrectionController(
             personalCorrections: personalCorrections
         )
+        let quickCorrectionHotKey = QuickCorrectionHotKey { [weak quickCorrectionController] in
+            quickCorrectionController?.presentForCurrentSelection()
+        }
         let openAICompatibleClient = OpenAICompatibleAPIClient()
         let openAICompatibleConnectionModel = OpenAICompatibleConnectionModel(
             client: openAICompatibleClient
@@ -91,14 +96,6 @@ final class CotabbyAppEnvironment {
         inputMonitor.globalToggleKeyModifiersProvider = { suggestionSettings.globalToggleKeyModifiers }
         inputMonitor.onGlobalToggleHotkey = { [weak suggestionSettings] in
             suggestionSettings?.toggleGloballyEnabled()
-        }
-        inputMonitor.onQuickCorrectionHotkey = { [weak quickCorrectionController] in
-            // Leave the event-tap callback immediately, then read the still-focused selection on
-            // the next main-loop turn. Building and activating a window inside a CGEvent callback
-            // risks the system disabling the tap for timeout.
-            DispatchQueue.main.async { [weak quickCorrectionController] in
-                quickCorrectionController?.presentForCurrentSelection()
-            }
         }
         // Stop the deep AX walk when Cotabby is disabled for the focused app or while Calendar's
         // fragile date/time editor is active. The latter is interaction-scoped: Calendar text fields
@@ -350,6 +347,7 @@ final class CotabbyAppEnvironment {
         self.suggestionSettings = suggestionSettings
         self.personalCorrections = personalCorrections
         self.quickCorrectionController = quickCorrectionController
+        self.quickCorrectionHotKey = quickCorrectionHotKey
         self.openAICompatibleConnectionModel = openAICompatibleConnectionModel
         self.foundationModelAvailabilityService = foundationModelAvailabilityService
         self.powerSourceMonitor = powerSourceMonitor
@@ -382,8 +380,9 @@ final class CotabbyAppEnvironment {
         // Key code changes reach InputMonitor through closures that read from the model
         // at event time (set above), so no Combine subscription is needed here.
 
-        // The command tap also owns the user-configurable global toggle. Re-evaluate its binding
-        // whenever the key code changes; quick correction keeps the tap installed independently.
+        // The global-toggle hotkey is the exception: its tap is install-on-demand so a user who
+        // never binds it pays zero per-keystroke cost. Install/uninstall whenever the binding
+        // crosses the unbound/bound boundary or when the key code itself changes.
         suggestionSettings.$globalToggleKeyCode
             .removeDuplicates()
             .sink { [weak inputMonitor] _ in

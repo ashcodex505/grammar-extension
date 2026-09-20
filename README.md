@@ -41,8 +41,6 @@ before the generic spell checker.
 - **Editable personal replacements** — add typo-to-correction rules directly in Settings, including
   valid words (`form` → `from`), contractions (`im` → `I'm`), single letters (`u` → `you`), names,
   and multi-word phrases (`get chat` → `this chat`).
-- **Quick correction capture** — select a misspelled word or phrase anywhere, press
-  **Control–Shift–`**, enter the replacement, and Cotabby saves or updates the automatic rule.
 - **74 starter corrections** — the supplied typo list is installed as editable rules on first launch.
 - **Personal vocabulary** — teach Cotabby words it must accept, with optional synchronization to the
   macOS learned-word dictionary.
@@ -89,7 +87,6 @@ required. An optional OpenAI-compatible engine can connect to a server you confi
 - **Emoji autocomplete** — type `:rocket:` and accept it without leaving the field
 - **Inline macros** — type `/` for quick math, unit and currency conversion, dates, and random values
 - **Personal autocorrect** — create exact word or phrase replacements that run before generic spelling
-- **Selection-to-rule shortcut** — press **Control–Shift–`** after selecting text to add its correction
 - **Learning corrections** — repeated acceptance raises confidence while Backspace reversals lower it
 - **Personal vocabulary** — keep names, product terms, and deliberate spellings from being corrected
 - **One-key correction** — accept an offered spelling fix with a single keystroke
@@ -178,11 +175,9 @@ Start typing in almost any text field. When a gray suggestion appears:
 
 - **`Tab`** — accept the next word. (Prefer whole phrases? Switch this in Settings → Acceptance Mode.)
 - **`` ` `` (backtick)** — accept the entire suggestion at once.
-- **Control–Shift–`` ` ``** — turn the selected word or phrase into a personal correction rule.
 - **`Esc`**, or just keep typing — dismiss it.
 
-Suggestion-acceptance shortcuts are rebindable under Settings → Shortcuts. The quick-correction
-capture shortcut is fixed so it remains predictable across applications.
+Every shortcut is rebindable under Settings → Shortcuts.
 
 ## Permissions
 

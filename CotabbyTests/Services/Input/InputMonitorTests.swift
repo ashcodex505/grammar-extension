@@ -298,54 +298,6 @@ final class InputMonitorTests: XCTestCase {
         }
     }
 
-    // MARK: - Global command hotkeys
-
-    func test_quickCorrectionHotkeyMatchesControlShiftBacktickExactly() {
-        runOnMainActor {
-            let monitor = makeMonitor()
-            monitor.onQuickCorrectionHotkey = {}
-
-            XCTAssertEqual(
-                monitor.resolveCommandHotkey(InputMonitorKeyEvent(
-                    keyCode: InputMonitor.quickCorrectionKeyCode,
-                    flags: [.maskControl, .maskShift]
-                )),
-                .quickCorrection
-            )
-            XCTAssertEqual(
-                monitor.resolveCommandHotkey(InputMonitorKeyEvent(
-                    keyCode: InputMonitor.quickCorrectionKeyCode,
-                    flags: .maskControl
-                )),
-                .notHandled
-            )
-            XCTAssertEqual(
-                monitor.resolveCommandHotkey(InputMonitorKeyEvent(
-                    keyCode: InputMonitor.quickCorrectionKeyCode,
-                    flags: [.maskControl, .maskShift, .maskCommand]
-                )),
-                .notHandled
-            )
-        }
-    }
-
-    func test_quickCorrectionTakesPriorityOverConflictingGlobalToggle() {
-        runOnMainActor {
-            let monitor = makeMonitor()
-            monitor.onQuickCorrectionHotkey = {}
-            monitor.globalToggleKeyCodeProvider = { InputMonitor.quickCorrectionKeyCode }
-            monitor.globalToggleKeyModifiersProvider = { [.control, .shift] }
-
-            XCTAssertEqual(
-                monitor.resolveCommandHotkey(InputMonitorKeyEvent(
-                    keyCode: InputMonitor.quickCorrectionKeyCode,
-                    flags: [.maskControl, .maskShift]
-                )),
-                .quickCorrection
-            )
-        }
-    }
-
     func test_isWordAcceptKey_matchesOnlyTheConfiguredWordAcceptBinding() {
         runOnMainActor {
             let monitor = makeMonitor()

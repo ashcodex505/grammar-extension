@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsCoordinator: SettingsCoordinator
 
     private let activationIndicatorController: ActivationIndicatorController
+    private let quickCorrectionHotKey: QuickCorrectionHotKey
     private let focusDebugOverlayController: FocusDebugOverlayController?
     /// Retained for the app's lifetime because the environment owns its own `cancellables` (the only
     /// subscriptions wiring the focus-poll-interval setting and the global-toggle hotkey rebind to the
@@ -52,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         modelDownloadManager = environment.modelDownloadManager
         focusModel = environment.focusModel
         inputMonitor = environment.inputMonitor
+        quickCorrectionHotKey = environment.quickCorrectionHotKey
         appUpdateManager = environment.appUpdateManager
         permissionGuidanceController = environment.permissionGuidanceController
         suggestionSettings = environment.suggestionSettings
@@ -145,6 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startRuntimeIfPreferredEngineRequiresIt()
         focusModel.start()
         inputMonitor.start()
+        quickCorrectionHotKey.start()
         appUpdateManager.start()
         suggestionCoordinator.start()
         inlineCommandCoordinator.start()
@@ -230,6 +233,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         focusDebugOverlayController?.hide()
         suggestionCoordinator.stop()
         inlineCommandCoordinator.stop()
+        quickCorrectionHotKey.stop()
         inputMonitor.stop()
         focusModel.stop()
 

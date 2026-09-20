@@ -78,20 +78,12 @@ final class QuickCorrectionController: NSObject, NSWindowDelegate {
     }
 
     private func showPanel(for draft: QuickCorrectionDraft) {
-        let existingReplacement = personalCorrections.database.rules.first(where: {
-            $0.normalizedTrigger == PersonalCorrectionRule.lookupKey(
-                for: draft.trigger,
-                caseSensitive: $0.isCaseSensitive
-            ) && $0.scope == .global
-        })?.replacement ?? ""
-
         let rootView = QuickCorrectionPanelView(
             trigger: draft.trigger,
-            initialReplacement: existingReplacement,
             onSave: { [weak self] replacement in
                 guard let self,
                       let normalized = draft.normalizedReplacement(replacement) else { return }
-                self.personalCorrections.upsertRule(PersonalCorrectionRule(
+                self.personalCorrections.addRule(PersonalCorrectionRule(
                     trigger: draft.trigger,
                     replacement: normalized,
                     source: .manual
@@ -104,7 +96,7 @@ final class QuickCorrectionController: NSObject, NSWindowDelegate {
         )
 
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 245),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 160),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -167,19 +159,17 @@ private struct QuickCorrectionPanelView: View {
     let onSave: (String) -> Void
     let onCancel: () -> Void
 
-    @State private var replacement: String
+    @State private var replacement = ""
     @FocusState private var isReplacementFocused: Bool
 
     init(
         trigger: String,
-        initialReplacement: String,
         onSave: @escaping (String) -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.trigger = trigger
         self.onSave = onSave
         self.onCancel = onCancel
-        _replacement = State(initialValue: initialReplacement)
     }
 
     private var normalizedReplacement: String? {
@@ -187,29 +177,18 @@ private struct QuickCorrectionPanelView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Replace selected text")
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
                 Text(trigger)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
-                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("With")
-                    .font(.subheadline.weight(.medium))
-                TextField("Correct spelling or phrase", text: $replacement)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Image(systemName: "arrow.right")
+                    .foregroundStyle(.secondary)
+                TextField("Replacement", text: $replacement)
                     .textFieldStyle(.roundedBorder)
                     .focused($isReplacementFocused)
                     .onSubmit(save)
             }
-
-            Text("This adds an automatic rule to Settings → Corrections.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
 
             HStack {
                 Spacer()
@@ -221,7 +200,7 @@ private struct QuickCorrectionPanelView: View {
             }
         }
         .padding(20)
-        .frame(width: 460, height: 245)
+        .frame(width: 420, height: 160)
         .onAppear {
             DispatchQueue.main.async { isReplacementFocused = true }
         }
